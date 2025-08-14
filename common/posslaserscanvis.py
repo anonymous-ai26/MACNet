@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# This file is covered by the LICENSE file in the root of this project.
+
 
 import vispy
 from vispy.scene import visuals, SceneCanvas
@@ -8,7 +7,6 @@ from matplotlib import pyplot as plt
 
 
 class LaserScanVis:
-  """Class that creates and handles a visualizer for a pointcloud"""
 
   def __init__(self, scan, scan_names, tag_names, label_names, offset=0,
                semantics=True, instances=False):
@@ -24,11 +22,7 @@ class LaserScanVis:
 
   def reset(self):
     """ Reset. """
-    # last key press (it should have a mutex, but visualization is not
-    # safety critical, so let's do things wrong)
-    self.action = "no"  # no, next, back, quit are the possibilities
 
-    # new canvas prepared for visualizing data
     self.canvas = SceneCanvas(keys='interactive', show=True)
     # interface (n next, b back, q quit, very simple)
     self.canvas.events.key_press.connect(self.key_press)
@@ -118,9 +112,6 @@ class LaserScanVis:
     # print()
     range_data = np.copy(self.scan.unproj_range)
 
-    # print(range_data.max(), range_data.min())
-    # range_data = range_data**(1 / power)
-    # print(range_data.max(), range_data.min())
     viridis_range = ((range_data - range_data.min()) /
                      (range_data.max() - range_data.min()) *
                      255).astype(np.uint8)
