@@ -1,10 +1,5 @@
-###########################################################################
-# Created by: Tramac
-# Date: 2019-03-25
-# Copyright (c) 2017
-###########################################################################
 
-"""Fast Segmentation Convolutional Neural Network"""
+
 import os
 import torch
 import torch.nn as nn
@@ -325,12 +320,7 @@ class FeatureFusionModule(nn.Module):
 
     def forward(self, higher_res_feature, lower_res_feature):
         lower_res_feature = F.interpolate(lower_res_feature, scale_factor=4, mode='bilinear', align_corners=True)
-        #lower_res_feature = self.dwconv(lower_res_feature)
-        #lower_res_feature = self.conv_lower_res(lower_res_feature)
-
-        #higher_res_feature = self.conv_higher_res(higher_res_feature)
-        #print(higher_res_feature.shape)
-        #print(lower_res_feature.shape)
+    
         out = higher_res_feature + lower_res_feature
         return self.relu(out)
 
