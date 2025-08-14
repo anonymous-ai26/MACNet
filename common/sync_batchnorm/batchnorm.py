@@ -1,12 +1,4 @@
-# -*- coding: utf-8 -*-
-# File   : batchnorm.py
-# Author : Jiayuan Mao
-# Email  : maojiayuan@gmail.com
-# Date   : 27/01/2018
-#
-# This file is part of Synchronized-BatchNorm-PyTorch.
-# https://github.com/vacancy/Synchronized-BatchNorm-PyTorch
-# Distributed under MIT License.
+
 
 import collections
 
@@ -49,7 +41,7 @@ class _SynchronizedBatchNorm(_BatchNorm):
         self._slave_pipe = None
 
     def forward(self, input):
-        # If it is not parallel computation or is in evaluation mode, use PyTorch's implementation.
+        
         if not (self._is_parallel and self.training):
             return F.batch_norm(
                 input, self.running_mean, self.running_var, self.weight, self.bias,
@@ -96,8 +88,6 @@ class _SynchronizedBatchNorm(_BatchNorm):
     def _data_parallel_master(self, intermediates):
         """Reduce the sum and square-sum, compute the statistics, and broadcast it."""
 
-        # Always using same "device order" makes the ReduceAdd operation faster.
-        # Thanks to:: Tete Xiao (http://tetexiao.com/)
         intermediates = sorted(intermediates, key=lambda i: i[1].sum.get_device())
 
         to_reduce = [i[1][:2] for i in intermediates]
@@ -197,60 +187,7 @@ class SynchronizedBatchNorm1d(_SynchronizedBatchNorm):
 
 
 class SynchronizedBatchNorm2d(_SynchronizedBatchNorm):
-    r"""Applies Batch Normalization over a 4d input that is seen as a mini-batch
-    of 3d inputs
 
-    .. math::
-
-        y = \frac{x - mean[x]}{ \sqrt{Var[x] + \epsilon}} * gamma + beta
-
-    This module differs from the built-in PyTorch BatchNorm2d as the mean and
-    standard-deviation are reduced across all devices during training.
-
-    For example, when one uses `nn.DataParallel` to wrap the network during
-    training, PyTorch's implementation normalize the tensor on each device using
-    the statistics only on that device, which accelerated the computation and
-    is also easy to implement, but the statistics might be inaccurate.
-    Instead, in this synchronized version, the statistics will be computed
-    over all training samples distributed on multiple devices.
-
-    Note that, for one-GPU or CPU-only case, this module behaves exactly same
-    as the built-in PyTorch implementation.
-
-    The mean and standard-deviation are calculated per-dimension over
-    the mini-batches and gamma and beta are learnable parameter vectors
-    of size C (where C is the input size).
-
-    During training, this layer keeps a running estimate of its computed mean
-    and variance. The running sum is kept with a default momentum of 0.1.
-
-    During evaluation, this running mean/variance is used for normalization.
-
-    Because the BatchNorm is done over the `C` dimension, computing statistics
-    on `(N, H, W)` slices, it's common terminology to call this Spatial BatchNorm
-
-    Args:
-        num_features: num_features from an expected input of
-            size batch_size x num_features x height x width
-        eps: a value added to the denominator for numerical stability.
-            Default: 1e-5
-        momentum: the value used for the running_mean and running_var
-            computation. Default: 0.1
-        affine: a boolean value that when set to ``True``, gives the layer learnable
-            affine parameters. Default: ``True``
-
-    Shape:
-        - Input: :math:`(N, C, H, W)`
-        - Output: :math:`(N, C, H, W)` (same shape as input)
-
-    Examples:
-        >>> # With Learnable Parameters
-        >>> m = SynchronizedBatchNorm2d(100)
-        >>> # Without Learnable Parameters
-        >>> m = SynchronizedBatchNorm2d(100, affine=False)
-        >>> input = torch.autograd.Variable(torch.randn(20, 100, 35, 45))
-        >>> output = m(input)
-    """
 
     def _check_input_dim(self, input):
         if input.dim() != 4:
@@ -260,61 +197,7 @@ class SynchronizedBatchNorm2d(_SynchronizedBatchNorm):
 
 
 class SynchronizedBatchNorm3d(_SynchronizedBatchNorm):
-    r"""Applies Batch Normalization over a 5d input that is seen as a mini-batch
-    of 4d inputs
 
-    .. math::
-
-        y = \frac{x - mean[x]}{ \sqrt{Var[x] + \epsilon}} * gamma + beta
-
-    This module differs from the built-in PyTorch BatchNorm3d as the mean and
-    standard-deviation are reduced across all devices during training.
-
-    For example, when one uses `nn.DataParallel` to wrap the network during
-    training, PyTorch's implementation normalize the tensor on each device using
-    the statistics only on that device, which accelerated the computation and
-    is also easy to implement, but the statistics might be inaccurate.
-    Instead, in this synchronized version, the statistics will be computed
-    over all training samples distributed on multiple devices.
-
-    Note that, for one-GPU or CPU-only case, this module behaves exactly same
-    as the built-in PyTorch implementation.
-
-    The mean and standard-deviation are calculated per-dimension over
-    the mini-batches and gamma and beta are learnable parameter vectors
-    of size C (where C is the input size).
-
-    During training, this layer keeps a running estimate of its computed mean
-    and variance. The running sum is kept with a default momentum of 0.1.
-
-    During evaluation, this running mean/variance is used for normalization.
-
-    Because the BatchNorm is done over the `C` dimension, computing statistics
-    on `(N, D, H, W)` slices, it's common terminology to call this Volumetric BatchNorm
-    or Spatio-temporal BatchNorm
-
-    Args:
-        num_features: num_features from an expected input of
-            size batch_size x num_features x depth x height x width
-        eps: a value added to the denominator for numerical stability.
-            Default: 1e-5
-        momentum: the value used for the running_mean and running_var
-            computation. Default: 0.1
-        affine: a boolean value that when set to ``True``, gives the layer learnable
-            affine parameters. Default: ``True``
-
-    Shape:
-        - Input: :math:`(N, C, D, H, W)`
-        - Output: :math:`(N, C, D, H, W)` (same shape as input)
-
-    Examples:
-        >>> # With Learnable Parameters
-        >>> m = SynchronizedBatchNorm3d(100)
-        >>> # Without Learnable Parameters
-        >>> m = SynchronizedBatchNorm3d(100, affine=False)
-        >>> input = torch.autograd.Variable(torch.randn(20, 100, 35, 45, 10))
-        >>> output = m(input)
-    """
 
     def _check_input_dim(self, input):
         if input.dim() != 5:
