@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# This file is covered by the LICENSE file in the root of this project.
+
 import datetime
 import os
 import time
@@ -64,7 +63,7 @@ class Trainer():
         # get the data  拿到数据集的数据
         from dataset.kitti.parser import Parser
         self.parser = Parser(root=self.datadir,
-                                          train_sequences=self.DATA["split"]["train"], # self.DATA["split"]["valid"] + self.DATA["split"]["train"] if finetune with valid
+                                          train_sequences=self.DATA["split"]["train"], 
                                           valid_sequences=self.DATA["split"]["valid"],
                                           test_sequences=None,
                                           labels=self.DATA["labels"],
@@ -78,7 +77,6 @@ class Trainer():
                                           gt=True,
                                           shuffle_train=True)
 
-        # weights for loss (and bias)
 
         epsilon_w = self.ARCH["train"]["epsilon_w"]
         content = torch.zeros(self.parser.get_n_classes(), dtype=torch.float)
@@ -88,10 +86,8 @@ class Trainer():
             content[x_cl] += freq
         self.loss_w = 1 / (content + epsilon_w)  # get weights
 
-#         power_value = 0.25
-#         self.loss_w = np.power(self.loss_w, power_value) * np.power(10, 1 - power_value)
 
-        for x_cl, w in enumerate(self.loss_w):  # ignore the ones necessary to ignore
+        for x_cl, w in enumerate(self.loss_w):  
             if DATA["learning_ignore"][x_cl]:
                 # don't weigh
                 self.loss_w[x_cl] = 0
@@ -173,19 +169,13 @@ class Trainer():
             self.criterion = nn.DataParallel(self.criterion).cuda()  # spread in gpus
             self.ls = nn.DataParallel(self.ls).cuda()
 
-#         self.optimizer = optim.AdamW(self.model.parameters(), lr=0.0001, weight_decay=0.0005)
-#         from modules.adam_policy import MyLR
-#         self.scheduler = MyLR(optimizer=self.optimizer, cycle=30)
-#         print(self.optimizer)
+
 
         #初始化超参数
         if self.ARCH["train"]["scheduler"] == "consine":
             length = self.parser.get_train_size()
             dict = self.ARCH["train"]["consine"]
-            # self.optimizer = optim.SGD(self.model.parameters(),
-            #                            lr=dict["min_lr"],
-            #                            momentum=self.ARCH["train"]["momentum"],
-            #                            weight_decay=self.ARCH["train"]["w_decay"])
+        
 
             if self.ARCH["train"]["optimizer"] == "sgd":
                 self.optimizer = optim.SGD([{'params': self.model.parameters()}],
@@ -220,9 +210,6 @@ class Trainer():
             w_dict = torch.load(path + "/SENet_valid_best",
                                 map_location=lambda storage, loc: storage)
             self.model.load_state_dict(w_dict['state_dict'], strict=True)
-#             self.optimizer.load_state_dict(w_dict['optimizer'])
-#             self.epoch = w_dict['epoch'] + 1
-#             self.scheduler.load_state_dict(w_dict['scheduler'])
             print("dict epoch:", w_dict['epoch'])
 #             self.info = w_dict['info']
             print("info", w_dict['info'])
@@ -412,7 +399,6 @@ class Trainer():
         #边界
         bd = AverageMeter()
 
-        # empty the cache to train now清空缓存训练
         if self.gpu:
             torch.cuda.empty_cache()
 
@@ -424,9 +410,6 @@ class Trainer():
         end = time.time()
         for i, (in_vol, proj_mask, proj_labels, _, path_seq, path_name, _, _, _, _, _, _, _, _, _) in tqdm(enumerate(train_loader), total=len(train_loader)):
 
-            #print(in_vol.shape)---torch.Size([6, 5, 64, 512])---投影的2D的输入 作为网络模型的输入
-            #print(proj_mask.shape)---torch.Size([6, 64, 512])
-            #print(proj_labels.shape)---torch.Size([6, 64, 512])---2D分割结果对应的GT
 
             # measure data loading time 计算数据加载时间
             self.data_time_t.update(time.time() - end)
@@ -439,10 +422,6 @@ class Trainer():
                 #print(proj_labels.shape)---torch.Size([6, 64, 512])
 
 
-
-
-            # compute output
-            #torch.cuda.amp.autocast()混合精度是一种将低精度计算与高精度计算混合使用的技术，可以在保持数值精度的情况下提高训练速度和减少显存占用
             with torch.cuda.amp.autocast():
 
 
@@ -576,9 +555,6 @@ class Trainer():
         with torch.no_grad():
             end = time.time()
             for i, (in_vol, proj_mask, proj_labels, _, path_seq, path_name, _, _, _, _, _, _, _, _, _) in tqdm(enumerate(val_loader), total=len(val_loader)):
-
-                #in_vol--为点云投影的2D图像 作为网络模型的输入
-                # proj_labels--为分割结果对应的GT,在2D层面上
 
                 if not self.multi_gpu and self.gpu:
                     in_vol = in_vol.cuda()
