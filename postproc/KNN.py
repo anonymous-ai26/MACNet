@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# This file is covered by the LICENSE file in the root of this project.
+
 
 import math
 
@@ -9,7 +8,6 @@ import torch.nn.functional as F
 
 
 def get_gaussian_kernel(kernel_size=3, sigma=2, channels=1):
-    # Create a x, y coordinate grid of shape (kernel_size, kernel_size, 2)
     x_coord = torch.arange(kernel_size)
     x_grid = x_coord.repeat(kernel_size).view(kernel_size, kernel_size)
     y_grid = x_grid.t()
@@ -18,9 +16,7 @@ def get_gaussian_kernel(kernel_size=3, sigma=2, channels=1):
     mean = (kernel_size - 1) / 2.
     variance = sigma ** 2.
 
-    # Calculate the 2-dimensional gaussian kernel which is
-    # the product of two gaussian distributions for two different
-    # variables (in this case called x and y)
+   
     gaussian_kernel = (1. / (2. * math.pi * variance)) * \
                       torch.exp(-torch.sum((xy_grid - mean) ** 2., dim=-1) / (2 * variance))
 
@@ -84,9 +80,7 @@ class KNN(nn.Module):
         idx_list = py * W + px
         unproj_unfold_k_rang = proj_unfold_k_rang[:, :, idx_list]
 
-        # WARNING, THIS IS A HACK
-        # Make non valid (<0) range points extremely big so that there is no screwing
-        # up the nn self.search
+
         unproj_unfold_k_rang[unproj_unfold_k_rang < 0] = float("inf")
 
         # now the matrix is unfolded TOTALLY, replace the middle points with the actual range points
@@ -96,9 +90,6 @@ class KNN(nn.Module):
         # now compare range
         k2_distances = torch.abs(unproj_unfold_k_rang - unproj_range)
 
-        # make a kernel to weigh the ranges according to distance in (x,y)
-        # I make this 1 - kernel because I want distances that are close in (x,y)
-        # to matter more
         inv_gauss_k = (
                 1 - get_gaussian_kernel(self.search, self.sigma, 1)).view(1, -1, 1)
         inv_gauss_k = inv_gauss_k.to(device).type(proj_range.type())
@@ -116,24 +107,19 @@ class KNN(nn.Module):
                                         padding=(pad, pad)).long()
         unproj_unfold_1_argmax = proj_unfold_1_argmax[:, :, idx_list]
 
-        # get the top k predictions from the knn at each pixel
         knn_argmax = torch.gather(
             input=unproj_unfold_1_argmax, dim=1, index=knn_idx)
 
-        # fake an invalid argmax of classes + 1 for all cutoff items
         if self.cutoff > 0:
             knn_distances = torch.gather(input=k2_distances, dim=1, index=knn_idx)
             knn_invalid_idx = knn_distances > self.cutoff
             knn_argmax[knn_invalid_idx] = self.nclasses
 
-        # now vote
-        # argmax onehot has an extra class for objects after cutoff
         knn_argmax_onehot = torch.zeros(
             (1, self.nclasses + 1, P[0]), device=device).type(proj_range.type())
         ones = torch.ones_like(knn_argmax).type(proj_range.type())
         knn_argmax_onehot = knn_argmax_onehot.scatter_add_(1, knn_argmax, ones)
 
-        # now vote (as a sum over the onehot shit)  (don't let it choose unlabeled OR invalid)
         knn_argmax_out = knn_argmax_onehot[:, 1:-1].argmax(dim=1) + 1
 
         # reshape again
