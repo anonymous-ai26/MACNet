@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# This file is covered by the LICENSE file in the root of this project.
+
 
 import argparse
 import shutil
@@ -39,8 +38,7 @@ if __name__ == '__main__':
         type=str,
         required=False,
         default='config/arch/senet-512.yml',
-        # default='config/arch/senet-2048p1.yml',
-        # default='config/arch/senet-1024p1.yml',
+      
         help='Architecture yaml cfg file. See /config/arch for sample. No default!',
     )
     parser.add_argument(
@@ -125,8 +123,6 @@ if __name__ == '__main__':
     else:
         print("No pretrained directory found.")
 
-    # copy all files to log folder (to remember what we did, and make inference
-    # easier). Also, standardize name to be able to open it later
     try:
         print("Copying files to %s for further reference." % FLAGS.log)
         copyfile(FLAGS.arch_cfg, FLAGS.log + "/arch_cfg.yaml")
@@ -136,9 +132,6 @@ if __name__ == '__main__':
         print("Error copying files, check permissions. Exiting...")
         quit()
 
-    #print(DATA)
-    # create trainer and start the training
-    #进行超参数的初始化
+
     trainer = Trainer(ARCH, DATA, FLAGS.dataset, FLAGS.log, FLAGS.pretrained)
-    #调用train()进行训练
     trainer.train()
