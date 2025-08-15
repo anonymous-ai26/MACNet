@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# This file is covered by the LICENSE file in the root of this project.
+
 
 import argparse
 import os
@@ -59,14 +58,7 @@ def eval(test_sequences, splits, pred):
         pred_names.extend(seq_pred_names)
     # print(pred_names)
 
-#     tt = 1000
-#     scan_names = scan_names[0:tt]
-#     label_names = label_names[0:tt]
-#     pred_names = pred_names[0:tt]
 
-    # check that I have the same number of files
-    # print("labels: ", len(label_names))
-    # print("predictions: ", len(pred_names))
     assert (len(label_names) == len(scan_names) and
             len(label_names) == len(pred_names))
 
@@ -80,8 +72,6 @@ def eval(test_sequences, splits, pred):
         label.open_scan(scan_file)
         label.open_label(label_file)
 
-        # label.open_scan_test(scan_file)
-        # label.open_label_test(label_file)
 
         u_label_sem = remap_lut[label.sem_label]  # remap to xentropy format
         if FLAGS.limit is not None:
@@ -90,8 +80,6 @@ def eval(test_sequences, splits, pred):
         # open prediction
         pred = SemLaserScan(project=False)
 
-        # pred.open_scan_test(scan_file)
-        # pred.open_label_test(pred_file)
 
         pred.open_scan(scan_file)
         pred.open_label(pred_file)
@@ -223,7 +211,6 @@ if __name__ == '__main__':
     for key, data in class_remap.items():
         if key > maxkey:
             maxkey = key
-    # +100 hack making lut bigger just in case there are unknown labels
     remap_lut = np.zeros((maxkey + 100), dtype=np.int32)
     for key, data in class_remap.items():
         try:
